@@ -1,23 +1,22 @@
 package com.stepstone.jc.demo;
 
 import com.dylibso.chicory.runtime.HostFunction;
-import com.dylibso.chicory.runtime.HostGlobal;
-import com.dylibso.chicory.runtime.HostImports;
-import com.dylibso.chicory.runtime.HostMemory;
-import com.dylibso.chicory.runtime.HostTable;
+import com.dylibso.chicory.runtime.ExternalGlobal;
+import com.dylibso.chicory.runtime.ExternalValues;
+import com.dylibso.chicory.runtime.ExternalMemory;
+import com.dylibso.chicory.runtime.ExternalTable;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.runtime.Memory;
-import com.dylibso.chicory.runtime.Module;
 import com.dylibso.chicory.runtime.WasmFunctionHandle;
+import com.dylibso.chicory.wasm.Module;
+import com.dylibso.chicory.wasm.Parser;
 import com.dylibso.chicory.wasm.types.MemoryLimits;
 import com.dylibso.chicory.wasm.types.Value;
 import com.dylibso.chicory.wasm.types.ValueType;
 
-import java.awt.EventQueue;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,54 +38,55 @@ public class Doom {
     void runGame() throws IOException {
         EventQueue.invokeLater(() -> gameWindow.setVisible(true));
 
+        byte[] bytes = this.getClass().getResourceAsStream("/doom.wasm").readAllBytes();
         // load WASM module
-        var module = Module.builder("doom.wasm").build();
+        var module = Instance.builder(Parser.parse(bytes));
 
         //        import function js_js_milliseconds_since_start():int;
         //        import function js_js_console_log(a:int, b:int);
         //        import function js_js_draw_screen(a:int);
         //        import function js_js_stdout(a:int, b:int);
         //        import function js_js_stderr(a:int, b:int);
-        var imports = new HostImports(
+        var imports = new ExternalValues(
                 new HostFunction[]{
                         new HostFunction(
-                                jsMillisecondsSinceStart(),
                                 JS_MODULE_NAME,
                                 "js_milliseconds_since_start",
+                                jsMillisecondsSinceStart(),
                                 List.of(),
                                 List.of(ValueType.I32)),
                         new HostFunction(
-                                jsConsoleLog(),
                                 JS_MODULE_NAME,
                                 "js_console_log",
+                                jsConsoleLog(),
                                 List.of(ValueType.I32, ValueType.I32),
                                 List.of()),
                         new HostFunction(
-                                jsStdout(),
                                 JS_MODULE_NAME,
                                 "js_stdout",
+                                jsStdout(),
                                 List.of(ValueType.I32, ValueType.I32),
                                 List.of()),
                         new HostFunction(
-                                jsStderr(),
                                 JS_MODULE_NAME,
                                 "js_stderr",
+                                jsStderr(),
                                 List.of(ValueType.I32, ValueType.I32),
                                 List.of()),
                         new HostFunction(
-                                jsDrawScreen(),
                                 JS_MODULE_NAME,
                                 "js_draw_screen",
+                                jsDrawScreen(),
                                 List.of(ValueType.I32),
                                 List.of()),
                 },
-                new HostGlobal[]{},
-                new HostMemory[]{
-                        new HostMemory("env", "memory", new Memory(new MemoryLimits(108, 1000)))
+                new ExternalGlobal[]{},
+                new ExternalMemory[]{
+                        new ExternalMemory("env", "memory", new Memory(new MemoryLimits(108, 1000)))
                 },
-                new HostTable[]{}
+                new ExternalTable[]{}
         );
-        var instance = module.withHostImports(imports).instantiate();
+        var instance = module.withExternalValues(imports).build();
 
         var addBrowserEvent = instance.export("add_browser_event");
         var doomLoopStep = instance.export("doom_loop_step");
