@@ -23,6 +23,11 @@
             <artifactId>runtime</artifactId>
             <version>${chicory.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.dylibso.chicory</groupId>
+            <artifactId>aot</artifactId>
+            <version>${chicory.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

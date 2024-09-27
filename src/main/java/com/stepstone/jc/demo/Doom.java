@@ -1,5 +1,6 @@
 package com.stepstone.jc.demo;
 
+import com.dylibso.chicory.aot.AotMachine;
 import com.dylibso.chicory.runtime.HostFunction;
 import com.dylibso.chicory.runtime.ExternalGlobal;
 import com.dylibso.chicory.runtime.ExternalValues;
@@ -40,7 +41,7 @@ public class Doom {
 
         byte[] bytes = this.getClass().getResourceAsStream("/doom.wasm").readAllBytes();
         // load WASM module
-        var module = Instance.builder(Parser.parse(bytes));
+        var module = Instance.builder(Parser.parse(bytes)).withMachineFactory(AotMachine::new);
 
         //        import function js_js_milliseconds_since_start():int;
         //        import function js_js_console_log(a:int, b:int);
